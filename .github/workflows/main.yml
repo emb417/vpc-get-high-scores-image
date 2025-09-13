@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    name: Build, Zip & Bundle Artifacts
+    name: Build & Bundle Artifacts
     runs-on: windows-latest
     permissions:
       contents: write
@@ -58,29 +58,25 @@ jobs:
           Copy-Item -Path src\UpdateHighScoreStop.mp3 `
                     -Destination release\
 
-      - name: Zip all release files
-        run: |
-          Compress-Archive -Path release\* -DestinationPath release.zip -Force
-
-      - name: Upload zipped artifact
+      - name: Upload release files individually
         uses: actions/upload-artifact@v4
         with:
-          name: release-zip
-          path: release.zip
+          name: release-files
+          path: release/*
 
   release:
-    name: Create Release & Attach ZIP
+    name: Create Release & Attach Assets
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Download ZIP artifact
+      - name: Download release files
         uses: actions/download-artifact@v4
         with:
-          name: release-zip
-          path: artifact
+          name: release-files
+          path: artifact/release
 
       - name: Determine release tag
         id: tagger
@@ -110,11 +106,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
-      - name: Upload ZIP asset to release
+      - name: Upload each file as a release asset
         run: |
           gh release upload \
             ${{ steps.tagger.outputs.tag }} \
-            artifact/release.zip \
+            artifact/release/* \
             --repo ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
