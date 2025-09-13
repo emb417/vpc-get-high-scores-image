@@ -114,6 +114,7 @@ jobs:
         run: |
           gh release upload \
             ${{ steps.tagger.outputs.tag }} \
-            artifact/release.zip
+            artifact/release.zip \
+            --repo ${{ github.repository }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
