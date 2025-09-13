@@ -10,8 +10,6 @@ import sqlite3
 import logging
 from logging.handlers import RotatingFileHandler
 import time
-import filedate
-import distutils.util
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry;
@@ -41,37 +39,33 @@ def log_setup():
     logger.setLevel(logging.INFO)
 
 def createImage(scoreList, mediaPath, gameName, fileNameSuffix):
-  payload = json.dumps({
-    "text": scoreList
-  })
+    payload = json.dumps({
+        "text": scoreList
+    })
 
-  #res = requests.request("POST", convertUri, headers=headers, data=payload)
-  
-  session = requests.Session()
-  retry = Retry(connect=3, backoff_factor=1.0)
-  adapter = HTTPAdapter(max_retries=retry)
-  session.mount('http://', adapter)
-  session.mount('https://', adapter)
-  res = session.request("POST", convertUri, headers=headers, data=payload)
+    session = requests.Session()
+    retry = Retry(connect=3, backoff_factor=1)
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    res = session.request("POST", convertUri, headers=headers, data=payload)
 
-  imageString = res.text.replace('data:image/png;base64,', '')
-  fullPath = mediaPath + "\\" + gameName + fileNameSuffix + ".png"
-  
-  logging.info(f'fullPath: {fullPath}')
+    imageString = res.text.replace('data:image/png;base64,', '')
+    fullPath = mediaPath + "\\" + gameName + fileNameSuffix + ".png"
 
-  if os.path.exists(fullPath):
-    logging.info(f'removing: {fullPath}')
-    os.remove(fullPath)
-  
-  with open(fullPath, "wb") as fh:
-      logging.info(f'creating: {fullPath}')
-      fh.write(base64.decodebytes(imageString.encode()))
+    logging.info(f'fullPath: {fullPath}')
 
-  filedate.File(fullPath).set(
-    created = datetime.now(),
-    modified = datetime.now(),
-    accessed = datetime.now()
-  )
+    if os.path.exists(fullPath):
+        logging.info(f'removing: {fullPath}')
+        os.remove(fullPath)
+    
+    with open(fullPath, "wb") as fh:
+        logging.info(f'creating: {fullPath}')
+        fh.write(base64.b64decode(imageString))
+
+    atime, mtime = os.stat(fullPath).st_atime, os.stat(fullPath).st_mtime
+    os.utime(fullPath, (atime, mtime))
+
       
 def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
   logging.info(f'\n\n----- fetchHighScoreImage Start')
@@ -88,7 +82,7 @@ def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
   scoreFullUri = scoreUri + urllib.parse.quote(vpsId)
 
   session = requests.Session()
-  retry = Retry(connect=3, backoff_factor=1.0)
+  retry = Retry(connect=3, backoff_factor=1)
   adapter = HTTPAdapter(max_retries=retry)
   session.mount('http://', adapter)
   session.mount('https://', adapter)
@@ -101,14 +95,14 @@ def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
     if len(tables[0]['scores']) > 0:
 
       try:
-        hasDataErrors = False;
+        hasDataErrors = False
         rankMaxLength = len(str("Rank"))
         userNameMaxLen = max(len(x['user']['username']) for x in limitedList)
         scoreMaxLen = max(max(len(str("{:,}".format(int(x['score'])))) for x in limitedList), len("Score"))
         versionMaxLen = max(max(len(x['versionNumber']) for x in limitedList), len("Version"))
         postedMaxLen = max(max(len(x['posted']) for x in limitedList), len("Posted"))
       except Exception as err:
-        hasDataErrors = True;
+        hasDataErrors = True
         scoreList += "This table has invalid/bad data in the VPC High Score DB.  Please contact @ericfaris.\n\n"
 
       if hasDataErrors == False:
@@ -143,6 +137,9 @@ def getTableFromPopperDB(vpsId, dbPath):
     table = cur.fetchone()
     conn.close
     return table
+  
+def strtobool(val):
+    return val.lower() in ("yes", "true", "t", "1")
 
 log_setup()
 logging.info('--- INSTANCE STARTED ---')
@@ -157,7 +154,7 @@ try:
   if len(sys.argv) > 1:
     logging.info('Found more than 0 arguments')
     exeName = sys.argv[0]
-    updateAll = distutils.util.strtobool(sys.argv[1])
+    updateAll = strtobool(sys.argv[1])
     vpsId = sys.argv[2]
     vpsIdField = sys.argv[3]
     dbPath = sys.argv[4]
