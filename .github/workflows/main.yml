@@ -1,34 +1,120 @@
-name: Build exe with Pyinstaller
+name: Build and Release Windows EXE
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+    branches:
+      - main
 
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (overrides push tag)'
+        required: false
+        default: ''
 
 jobs:
   build:
-    name: Build exe
+    name: Build EXE and Bundle Artifacts
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable with PyInstaller
+        working-directory: src
+        run: |
+          pyinstaller \
+            --noconfirm \
+            --clean \
+            --onefile \
+            --name vpc-get-high-scores-image \
+            createHighScoreImage.py
+
+      - name: Bundle all release files
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-files
+          path: |
+            src/dist/windows/vpc-get-high-scores-image.exe
+            src/POPMENU_GetHighScoresForAllTables.bat
+            src/playsound.exe
+            src/UpdateHighScoreStart.mp3
+            src/UpdateHighScoreStop.mp3
+
+  release:
+    name: Create Release & Upload Assets via GH CLI
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
-    - name: Check out the repo
-      uses: actions/checkout@v2
+      - name: Download bundled artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: release-files
+          path: artifact
 
-    - name: Package Application
-      uses: JackMcKew/pyinstaller-action-windows@main
-      with:
-        path: src
+      - name: Determine release tag
+        id: tagger
+        run: |
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF##*/}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "tag=${GITHUB_REF##*/}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=unreleased-${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+          fi
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        path: src/dist/windows/vpc-get-high-scores-image.exe
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tagger.outputs.tag }}
+          name: Release ${{ steps.tagger.outputs.tag }}
+          body: |
+            Auto-generated release for ${{ steps.tagger.outputs.tag }}
+            See CHANGELOG.md for details.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: ncipollo/release-action@v1
-      with:
-        artifacts: "src/dist/windows/vpc-get-high-scores-image.exe,src/POPMENU_GetHighScoresForAllTables.bat,src/playsound.exe,src/UpdateHighScoreStart.mp3,src/UpdateHighScoreStop.mp3"
-        token: ${{ secrets.GH_TOKEN }}
-        commit: ${{ github.sha }}
-        tag: v1.2.10
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Upload all assets with GH CLI
+        run: |
+          gh release upload \
+            ${{ steps.tagger.outputs.tag }} \
+            artifact/vpc-get-high-scores-image.exe \
+            artifact/POPMENU_GetHighScoresForAllTables.bat \
+            artifact/playsound.exe \
+            artifact/UpdateHighScoreStart.mp3 \
+            artifact/UpdateHighScoreStop.mp3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
