@@ -37,9 +37,7 @@ jobs:
       - name: Build executable with PyInstaller
         working-directory: src
         run: |
-          pyinstaller --noconfirm --clean --onefile \
-            --name vpc-get-high-scores-image \
-            createHighScoreImage.py
+          pyinstaller --noconfirm --clean --onefile --name vpc-get-high-scores-image createHighScoreImage.py
 
       - name: Prepare release folder
         run: |
