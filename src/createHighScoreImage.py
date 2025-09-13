@@ -15,7 +15,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry;
 
 apiBaseUri = "https://virtualpinballchat.com:8443"
-scoreUri = apiBaseUri + "/vps/api/v1/scoresByVpsId?vpsId="
+scoreUri = apiBaseUri + "/vpc/api/v1/scoresByVpsId?vpsId="
 convertUri = apiBaseUri + "/vpc/api/v1/convert"
 headers = {
   'Authorization': 'Bearer ODYwMzEwODgxNTc3NDY3OTA0.YN5Y8Q.0P5EwvlXHG6YOtNfkWKt_xOFTtc',
