@@ -6,7 +6,6 @@ on:
       - 'v*.*.*'
     branches:
       - main
-
   workflow_dispatch:
     inputs:
       release_tag:
@@ -30,40 +29,32 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r src/requirements.txt
-          pip install pyinstaller
+          pip install -r src/requirements.txt pyinstaller
 
       - name: Build executable with PyInstaller
         working-directory: src
         run: |
-          pyinstaller \
-            --noconfirm \
-            --clean \
-            --onefile \
+          pyinstaller --noconfirm --clean --onefile \
             --name vpc-get-high-scores-image \
             createHighScoreImage.py
 
-      - name: Bundle all release files
-        uses: actions/upload-artifact@v3
+      - name: Prepare release folder
+        run: |
+          mkdir release
+          cp src/dist/windows/vpc-get-high-scores-image.exe release/
+          cp src/POPMENU_GetHighScoresForAllTables.bat release/
+          cp src/playsound.exe release/
+          cp src/UpdateHighScoreStart.mp3 release/
+          cp src/UpdateHighScoreStop.mp3 release/
+
+      - name: Upload bundled artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: release-files
-          path: |
-            src/dist/windows/vpc-get-high-scores-image.exe
-            src/POPMENU_GetHighScoresForAllTables.bat
-            src/playsound.exe
-            src/UpdateHighScoreStart.mp3
-            src/UpdateHighScoreStop.mp3
+          path: release/
 
   release:
     name: Create Release & Upload Assets via GH CLI
@@ -74,7 +65,7 @@ jobs:
 
     steps:
       - name: Download bundled artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: release-files
           path: artifact
@@ -109,12 +100,8 @@ jobs:
 
       - name: Upload all assets with GH CLI
         run: |
-          gh release upload \
-            ${{ steps.tagger.outputs.tag }} \
-            artifact/vpc-get-high-scores-image.exe \
-            artifact/POPMENU_GetHighScoresForAllTables.bat \
-            artifact/playsound.exe \
-            artifact/UpdateHighScoreStart.mp3 \
-            artifact/UpdateHighScoreStop.mp3
+          files=(artifact/release/*)
+          [ ${#files[@]} -gt 0 ] || exit 1
+          gh release upload ${{ steps.tagger.outputs.tag }} "${files[@]}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
