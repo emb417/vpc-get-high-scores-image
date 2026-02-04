@@ -3,16 +3,16 @@ name: Build and Release Windows EXE
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
     branches:
       - main
 
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag (overrides push tag)'
+        description: "Release tag (overrides push tag)"
         required: false
-        default: ''
+        default: ""
 
 jobs:
   build:
@@ -28,7 +28,26 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.x"
+
+      - name: Stamp version into RC file
+        shell: pwsh
+        run: |
+          # 1. Get the tag (e.g., v1.0.0) or fallback
+          $tag = "${{ github.ref_name }}".Replace("v", "")
+          if ($tag -notmatch '^\d+\.\d+\.\d+$') { $tag = "0.0.0" }
+
+          # 2. Split into Major, Minor, Patch
+          $ver = $tag.Split('.')
+          $major, $minor, $patch = $ver[0], $ver[1], $ver[2]
+
+          # 3. Replace placeholders in the file
+          (Get-Content src/version.rc) `
+            -replace 'MAJOR', $major `
+            -replace 'MINOR', $minor `
+            -replace 'PATCH', $patch `
+            -replace 'FULL_VERSION', $tag `
+            | Set-Content src/version.rc
 
       - name: Install dependencies
         run: |
@@ -39,7 +58,9 @@ jobs:
         working-directory: src
         shell: pwsh
         run: |
+          # Note the addition of the --version-file flag
           pyinstaller --noconfirm --clean --onefile `
+            --version-file="version.rc" `
             --name vpc-get-high-scores-image `
             createHighScoreImage.py
 

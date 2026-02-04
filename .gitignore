@@ -3,3 +3,4 @@ dist/
 src/pycache/
 *.log
 *.log.*
+.DS_Store
