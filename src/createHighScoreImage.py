@@ -10,7 +10,6 @@ import sqlite3
 import logging
 from logging.handlers import RotatingFileHandler
 import time
-import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -43,12 +42,7 @@ def log_setup():
 def createImage(scoreList, mediaPath, gameName, fileNameSuffix):
     payload = json.dumps({"text": scoreList})
 
-    session = requests.Session()
-    retry = Retry(connect=3, backoff_factor=1)
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-    res = session.request("POST", convertUri, headers=headers, data=payload)
+    res = make_session().request("POST", convertUri, headers=headers, data=payload)
 
     imageString = res.text.replace("data:image/png;base64,", "")
     fullPath = mediaPath + "\\" + gameName + fileNameSuffix + ".png"
@@ -81,13 +75,7 @@ def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
 
     scoreFullUri = scoreUri + urllib.parse.quote(vpsId)
 
-    session = requests.Session()
-    retry = Retry(connect=3, backoff_factor=1)
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-
-    tables = (session.get(scoreFullUri)).json()
+    tables = make_session().get(scoreFullUri).json()
 
     if len(tables) > 0:
         limitedList = tables[0]["scores"][:numRows]
@@ -102,9 +90,8 @@ def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
                     max(len(str("{:,}".format(int(x["score"])))) for x in limitedList),
                     len("Score"),
                 )
-                versionMaxLen = max(
-                    max(len(x["versionNumber"]) for x in limitedList), len("Version")
-                )
+                tableVersion = tables[0].get("versionNumber", "")
+                versionMaxLen = max(len(tableVersion), len("Version"))
                 postedMaxLen = max(
                     max(len(x["posted"]) for x in limitedList), len("Posted")
                 )
@@ -151,7 +138,7 @@ def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
                             + "    "
                             + str("{:,}".format(int(score["score"]))).rjust(scoreMaxLen)
                             + "    "
-                            + score["versionNumber"].ljust(versionMaxLen)
+                            + tableVersion.ljust(versionMaxLen)
                             + "    "
                             + score["posted"]
                             + "\n"
@@ -176,12 +163,20 @@ def getTableFromPopperDB(vpsId, dbPath):
     cur = conn.cursor()
     cur.execute("SELECT * FROM 'Games' WHERE " + vpsIdField + " = '" + vpsId + "'")
     table = cur.fetchone()
-    conn.close
+    conn.close()
     return table
 
 
 def strtobool(val):
     return val.lower() in ("yes", "true", "t", "1")
+
+
+def make_session():
+    session = requests.Session()
+    adapter = HTTPAdapter(max_retries=Retry(connect=3, backoff_factor=1))
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
 
 
 log_setup()
@@ -223,7 +218,7 @@ try:
     cur.execute("SELECT * FROM 'Games' WHERE EMUID = 1 ORDER BY GameDisplay")
     fieldNames = [description[0] for description in cur.description]
     rows = cur.fetchall()
-    conn.close
+    conn.close()
 
     if updateAll:
         logging.info(f"Starting to update all tables")
