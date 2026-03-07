@@ -1,11 +1,7 @@
 import requests
 import json
-import base64
 import sys
-import datetime
 import os
-import urllib.parse
-from datetime import datetime
 import sqlite3
 import logging
 from logging.handlers import RotatingFileHandler
@@ -14,16 +10,10 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 apiBaseUri = "https://virtualpinballchat.com"
-scoreUri = apiBaseUri + "/vpc/api/v1/scoresByVpsId?vpsId="
 convertUri = apiBaseUri + "/vpc/api/v1/convert"
 headers = {
     "Content-Type": "application/json",
 }
-
-
-def set_file_last_modified(file_path, dt):
-    dt_epoch = dt.timestamp()
-    os.utime(file_path, (dt_epoch, dt_epoch))
 
 
 def log_setup():
@@ -39,26 +29,14 @@ def log_setup():
     logger.setLevel(logging.INFO)
 
 
-def createImage(scoreList, mediaPath, gameName, fileNameSuffix):
-    payload = json.dumps({"text": scoreList})
-
+def createImage(vpsId, numRows, mediaPath, gameName, fileNameSuffix):
+    payload = json.dumps({"vpsId": vpsId, "numRows": numRows})
     res = make_session().request("POST", convertUri, headers=headers, data=payload)
-
-    imageString = res.text.replace("data:image/png;base64,", "")
     fullPath = mediaPath + "\\" + gameName + fileNameSuffix + ".png"
-
-    logging.info(f"fullPath: {fullPath}")
-
     if os.path.exists(fullPath):
-        logging.info(f"removing: {fullPath}")
         os.remove(fullPath)
-
     with open(fullPath, "wb") as fh:
-        logging.info(f"creating: {fullPath}")
-        fh.write(base64.b64decode(imageString))
-
-    atime, mtime = os.stat(fullPath).st_atime, os.stat(fullPath).st_mtime
-    os.utime(fullPath, (atime, mtime))
+        fh.write(res.content)
 
 
 def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
@@ -67,93 +45,8 @@ def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
 
     table = getTableFromPopperDB(vpsId, dbPath)
     gameName = table[fieldNames.index("GameName")]
-    gameDisplay = table[fieldNames.index("GameDisplay")]
-    authorName = table[fieldNames.index("Author")]
-    scoreList = "VPS Id (" + vpsIdField + "): " + vpsId + "\n"
-    scoreList += "Screen Name: " + gameDisplay + "\n"
-    scoreList += "Author: " + authorName + "\n\n"
 
-    scoreFullUri = scoreUri + urllib.parse.quote(vpsId)
-
-    tables = make_session().get(scoreFullUri).json()
-
-    if len(tables) > 0:
-        limitedList = tables[0]["scores"][:numRows]
-
-        if len(tables[0]["scores"]) > 0:
-
-            try:
-                hasDataErrors = False
-                rankMaxLength = len(str("Rank"))
-                userNameMaxLen = max(len(x["user"]["username"]) for x in limitedList)
-                scoreMaxLen = max(
-                    max(len(str("{:,}".format(int(x["score"])))) for x in limitedList),
-                    len("Score"),
-                )
-                tableVersion = tables[0].get("versionNumber", "")
-                versionMaxLen = max(len(tableVersion), len("Version"))
-                postedMaxLen = max(
-                    max(len(x["posted"]) for x in limitedList), len("Posted")
-                )
-            except Exception as err:
-                hasDataErrors = True
-                scoreList += "This table has invalid/bad data in the VPC High Score DB.  Please contact @emb417.\n\n"
-
-            if hasDataErrors == False:
-                scoreList += (
-                    "Rank".ljust(rankMaxLength)
-                    + "  "
-                    + "User".ljust(userNameMaxLen)
-                    + "    "
-                    + "Score".ljust(scoreMaxLen)
-                    + "    "
-                    + "Version".ljust(versionMaxLen)
-                    + "    "
-                    + "Posted"
-                    + "\n"
-                )
-                scoreList += (
-                    "".ljust(rankMaxLength, "-")
-                    + "  "
-                    + "".ljust(userNameMaxLen, "-")
-                    + "    "
-                    + "".rjust(scoreMaxLen, "-")
-                    + "    "
-                    + "".ljust(versionMaxLen, "-")
-                    + "    "
-                    + "".ljust(postedMaxLen, "-")
-                    + "\n"
-                )
-
-                i = 1
-
-                numRows = min(numRows, len(tables[0]["scores"]))
-
-                for score in limitedList:
-                    if score.get("user"):
-                        scoreList += (
-                            str(i).rjust(rankMaxLength)
-                            + "  "
-                            + score["user"]["username"].ljust(userNameMaxLen)
-                            + "    "
-                            + str("{:,}".format(int(score["score"]))).rjust(scoreMaxLen)
-                            + "    "
-                            + tableVersion.ljust(versionMaxLen)
-                            + "    "
-                            + score["posted"]
-                            + "\n"
-                        )
-                        i = i + 1
-        else:
-            scoreList += "No scores have been posted for this table.\n\n"
-    else:
-        scoreList += "This table DOES NOT exist in the VPC High Score Corner.\nPlease contact @High Score Corner Mod to add this \ntable in the high-score-corner channel on Discord.\nPlease send the VPS ID in the message.\n\n"
-
-    scoreList += "\nupdated: " + datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-    print(scoreList + "\n\n")
-    logging.info(f"Result:\n{scoreList}")
-
-    createImage(scoreList, mediaPath, gameName, fileNameSuffix)
+    createImage(vpsId, numRows, mediaPath, gameName, fileNameSuffix)
 
     logging.info(f"----- fetchHighScoreImage End")
 
@@ -225,33 +118,11 @@ try:
         logging.info(f"Found {str(len(rows))} tables")
         for row in rows:
             gameName = row[fieldNames.index("GameName")]
-            gameDisplay = row[fieldNames.index("GameDisplay")]
-            authorName = row[fieldNames.index("Author")]
             vpsId = row[fieldNames.index(vpsIdField)]
             if vpsId:
                 fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath)
             else:
-                if vpsId:
-                    scoreList = "VPS Id: " + vpsId + "\n"
-                else:
-                    scoreList = "VPS Id: \n"
-                if gameDisplay:
-                    scoreList = "Table: " + gameDisplay + "\n"
-                else:
-                    scoreList = "Table: \n"
-                if authorName:
-                    scoreList += "Author: " + authorName + "\n\n"
-                else:
-                    scoreList += "Author: \n\n"
-                scoreList += (
-                    "VPS Id not found.  Double the VPS Id field in PinUP Popper.\n\n"
-                )
-                scoreList += "\nupdated: " + datetime.now().strftime(
-                    "%m/%d/%Y %H:%M:%S"
-                )
-                print(scoreList + "\n\n")
-                logging.info(f"Result:\n{scoreList}")
-                createImage(scoreList, mediaPath, gameName, fileNameSuffix)
+                logging.info(f"Skipping {gameName} — no vpsId")
         logging.info(f"Finished updating all tables")
     else:
         logging.info(f"Starting to update 1 table: " + vpsId)
