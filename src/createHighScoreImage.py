@@ -1,3 +1,13 @@
+import warnings
+
+# Suppress RequestsDependencyWarning without importing requests first
+warnings.filterwarnings("ignore", message=".*character detection dependency.*")
+
+try:
+    import charset_normalizer
+except ImportError:
+    pass
+
 import requests
 import json
 import sys
