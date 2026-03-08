@@ -17,7 +17,7 @@ You can see the VPS Id for a table in the image below:
 
 ## **Setup the batch file to run on Windows startup**
 
-1. Using <https://github.com/emb417/vpc-get-high-scores-image/releases>, download the following files to the `C:\Pinball\PinUPSystem\PinupPopper\LAUNCH` folder (**IMPORTANT: BE AWARE THE LAUNCH FOLDER MIGHT BE IN A DIFFERENT LOCATION IF YOU HAVE USED BALLER INSTALLER**).
+1. Using <https://github.com/emb417/vpc-get-high-scores-image/releases>, download the following files to the `C:\Pinball\PinUPSystem\LAUNCH` folder (**IMPORTANT: BE AWARE THE LAUNCH FOLDER MIGHT BE IN A DIFFERENT LOCATION IF YOU HAVE USED BALLER INSTALLER**).
 
 2. Open `POPMENU_GetHighScoresForAllTables.bat` and edit line 3 to conform to your field.
    - Example: `"%_curloc%\vpc-get-high-scores-image.exe" "True" "" "CUSTOM3" "%_ParentFolderName%" "%_ParentFolderName%\POPmedia\Visual Pinball X\Other2" "10" ""`
@@ -75,7 +75,7 @@ You can see the VPS Id for a table in the image below:
 
 ## **Test Getting High Scores**
 
-1. Navigate to the C:\Pinball\PinUPSystem\PinupPopper\LAUNCH folder
+1. Navigate to the C:\Pinball\PinUPSystem\LAUNCH folder
 
 2. Run `POPMENU_GetHighScoresForAllTables.bat`
    You should see a command window start executing and pulling down the images...
