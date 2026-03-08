@@ -21,18 +21,27 @@ You can see the VPS Id for a table in the image below:
 
 2. Open `POPMENU_GetHighScoresForAllTables.bat` and edit line 3 to conform to your field.
    - Example: `"%_curloc%\vpc-get-high-scores-image.exe" "True" "" "CUSTOM3" "%_ParentFolderName%" "%_ParentFolderName%\POPmedia\Visual Pinball X\Other2" "10" ""`
-     - **You will need change the CUSTOM3 field above to match the field you have chosen to house the VPS Id in Step 1 - 1b**
 
-3. Create a shortcut to `POPMENU_GetHighScoresForAllTables.bat`
+- **Parameters Explained:**
+  1. `updateAll` (True/False): If "True", the script will iterate through all tables in the PinUP Popper database (filtered by EMUID = 1) and update their high score images. If "False", it will only update the image for the specific `vpsId` provided.
+  2. `vpsId` (string): The VPS ID of the table to update. This parameter is ignored if `updateAll` is "True".
+  3. `vpsIdField` (string): The name of the custom field in your PinUP Popper database that stores the VPS ID (e.g., "CUSTOM3").
+  4. `dbPath` (string): The absolute path to your PinUP Popper database directory (e.g., `C:\Pinball\PinUPSystem`).
+  5. `mediaPath` (string): The absolute path to the directory where the high score images will be saved (e.g., `C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2`).
+  6. `numRows` (integer): The number of high score rows to fetch and display in the image (e.g., "10").
+  7. `fileNameSuffix` (string): An optional suffix to add to the generated image file name (e.g., "" for no suffix, or "\_HS" for `GameName_HS.png`).
+  - **You will need change the `vpsIdField` above (e.g., CUSTOM3) to match the field you have chosen to house the VPS Id in Step 1 - 1b**
 
-4. Copy the shortcut to your Windows startup folder
+1. Create a shortcut to `POPMENU_GetHighScoresForAllTables.bat`
+
+2. Copy the shortcut to your Windows startup folder
 
 ## **Setup scripts to run the vpc-get-high-scores-image.exe on Launch and Close of the table**
 
 1. Pinup Popper Setup > Popper Setup Tab > Emulators > Visual Pinball X > Launch Setup Tab
    - Paste the following at the end of 1. **Launch Script** and 2. **Close Script**:
      - `START /min "" "[STARTDIR]LAUNCH\vpc-get-high-scores-image.exe" "False" "[CUSTOM3]" "CUSTOM3" "C:\Pinball\PinUPSystem" "C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2" "10" ""`
-       - **You will need change the CUSTOM3 fields above to match the field you have chosen to house the VPS Id in Step 1 - 1b**
+       - **You will need change the `vpsIdField` (e.g., CUSTOM3) above to match the field you have chosen to house the VPS Id in Step 1 - 1b**
 2. Save and Close
 
 ## **Enable Display to Show Other2**
