@@ -1,7 +1,3 @@
-import warnings
-from requests.packages.urllib3.exceptions import RequestsDependencyWarning
-warnings.filterwarnings("ignore", category=RequestsDependencyWarning)
-
 import requests
 import json
 import sys
