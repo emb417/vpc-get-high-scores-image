@@ -13,20 +13,15 @@ You can see the VPS Id for a table in the image below:
 
 **1a.** Download an updated version of the puplookup.csv from VPS to the PinUPSystem folder from: <https://virtualpinballspreadsheet.github.io/export>
 
-**1b.** You will now need to open up the puplookup.csv file and change the `VPS-ID` column name in the header row to the field name you want to import the VPS Id into the PinUP Popper DB. - Example: I want to store the VPS ID into the Custom3 field in Game Manager. I will change the last field to `Custom3`
-
-**1c.** You now need to import the puplookup.csv into PinUP Popper. This is done by Pinup Popper Setup > Advanced Setup > Import CSV. When the import completes, the VPS ID will now be imported into the field you renamed in the header, when you hit import in Game Manager.
-
-**1d.** You now need to re-import data for each table so it picks up the VPS ID into the field you determined in the puplookup.csv header.
+**1b.** You now need to import data for each new table so it picks up the VPS ID into the field you configured in Pinup Popper Lookup settings tab in the Game Manager (add VPS-ID to the field).
 
 ## **Setup the batch file to run on Windows startup**
 
 1. Using <https://github.com/emb417/vpc-get-high-scores-image/releases>, download the following files to the `C:\Pinball\PinUPSystem\PinupPopper\LAUNCH` folder (**IMPORTANT: BE AWARE THE LAUNCH FOLDER MIGHT BE IN A DIFFERENT LOCATION IF YOU HAVE USED BALLER INSTALLER**).
 
-2. Open `POPMENU_GetHighScoresForAllTables.bat` and edit line 3 to conform to you folder structure.
-   - "Full path of vpc-get-high-scores-image.exe" "Update High Scores For All Tables" "VPS Id" "VPS Id Field Name" "Full path to PinUP System folder" "Full path to your media folder for Other2" "max number of rows to display in score list" "suffix to add to filename in case you want to use the PinUP Popper ability to have multiple files in a particular media folder"
+2. Open `POPMENU_GetHighScoresForAllTables.bat` and edit line 3 to conform to your field.
    - Example: `"%_curloc%\vpc-get-high-scores-image.exe" "True" "" "CUSTOM3" "%_ParentFolderName%" "%_ParentFolderName%\POPmedia\Visual Pinball X\Other2" "10" ""`
-     - **You will need change the CUSTOM3 field above to match the field you have chosen to house the VPS Id in Step 1 - 1d**
+     - **You will need change the CUSTOM3 field above to match the field you have chosen to house the VPS Id in Step 1 - 1b**
 
 3. Create a shortcut to `POPMENU_GetHighScoresForAllTables.bat`
 
@@ -37,13 +32,13 @@ You can see the VPS Id for a table in the image below:
 1. Pinup Popper Setup > Popper Setup Tab > Emulators > Visual Pinball X > Launch Setup Tab
    - Paste the following at the end of 1. **Launch Script** and 2. **Close Script**:
      - `START /min "" "[STARTDIR]LAUNCH\vpc-get-high-scores-image.exe" "False" "[CUSTOM3]" "CUSTOM3" "C:\Pinball\PinUPSystem" "C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2" "10" ""`
-       - **You will need change the CUSTOM3 fields above to match the field you have chosen to house the VPS Id in Step 1 - 1d**
+       - **You will need change the CUSTOM3 fields above to match the field you have chosen to house the VPS Id in Step 1 - 1b**
 2. Save and Close
 
 ## **Enable Display to Show Other2**
 
 1. Pinup Popper Setup > Popper Setup Tab > GlobalConfig button > Displays tab
-   - Set `Other 2` = `Active and Hidden`
+   - Set `Other 2` = `Active Hidden`
 2. Save
 
 3. Pinup Popper Setup > Popper Setup Tab > Screens / Themes button
@@ -59,10 +54,10 @@ You can see the VPS Id for a table in the image below:
 2. On the "PinUP Player DIsplays" window, click on `Other2` in the "Select Screen" list
 
 3. Adjust this display to your liking. This will be the display for the high scores.
-   - Suggestions:
+   - Suggestions for main playfield screen:
      - Rotation: `270`
-     - Width: `2000`
-     - Height: `1800`
+     - Width: `350`
+     - Height: `600`
      - Default State: `off`
 4. Click "Save Settings" button
 
@@ -99,7 +94,3 @@ You can see the VPS Id for a table in the image below:
 2. Scroll to Custom Scripts
 
 3. Press GetHighScoresForAllTables
-
-## TODOs
-
-- Update Readme, possibly fuzzy name match when vps id doesn't exist
