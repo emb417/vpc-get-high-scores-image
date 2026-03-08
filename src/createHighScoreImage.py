@@ -28,13 +28,16 @@ headers = {
 def log_setup():
     logName = "vpc-get-high-scores-image.log"
     log_handler = RotatingFileHandler(logName, maxBytes=10000000, backupCount=3)
+    console_handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)s : %(message)s", "%b %d %H:%M:%S"
     )
     formatter.converter = time.gmtime  # if you want UTC time
     log_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
     logger = logging.getLogger()
     logger.addHandler(log_handler)
+    logger.addHandler(console_handler)
     logger.setLevel(logging.INFO)
 
 
