@@ -56,8 +56,8 @@ You can see the VPS Id for a table in the image below:
 3. Adjust this display to your liking. This will be the display for the high scores.
    - Suggestions for main playfield screen:
      - Rotation: `270`
-     - Width: `350`
-     - Height: `600`
+     - Width: `700` (or `350`)
+     - Height: `1172` (or `586`)
      - Default State: `off`
 4. Click "Save Settings" button
 
