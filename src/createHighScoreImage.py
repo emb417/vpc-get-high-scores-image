@@ -1,7 +1,6 @@
 import requests
 import json
 import sys
-import os
 import sqlite3
 import logging
 from logging.handlers import RotatingFileHandler
@@ -33,8 +32,6 @@ def createImage(vpsId, numRows, mediaPath, gameName, fileNameSuffix):
     payload = json.dumps({"vpsId": vpsId, "numRows": numRows})
     res = make_session().request("POST", convertUri, headers=headers, data=payload)
     fullPath = mediaPath + "\\" + gameName + fileNameSuffix + ".png"
-    if os.path.exists(fullPath):
-        os.remove(fullPath)
     with open(fullPath, "wb") as fh:
         fh.write(res.content)
 
