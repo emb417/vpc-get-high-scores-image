@@ -1,11 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+charset_datas, charset_binaries, charset_hiddenimports = collect_all('charset_normalizer')
 
 a = Analysis(
     ['createHighScoreImage.py'],
     pathex=[],
-    binaries=[],
-    datas=[],
-    hiddenimports=['charset_normalizer', 'charset_normalizer.md__mypyc'],
+    binaries=charset_binaries,
+    datas=charset_datas,
+    hiddenimports=charset_hiddenimports,
     hookspath=[],
     runtime_hooks=[],
     excludes=['tkinter', 'unittest'],
