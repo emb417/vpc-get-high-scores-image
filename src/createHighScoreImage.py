@@ -19,7 +19,9 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 apiBaseUri = "https://virtualpinballchat.com"
-convertUri = apiBaseUri + "/vpc/api/v1/convert"
+highScoresUri = apiBaseUri + "/vpc/api/v1/generateHighScoresLeaderboard"
+weeklyUri = apiBaseUri + "/vpc/api/v1/generateWeeklyLeaderboard"
+
 headers = {
     "Content-Type": "application/json",
 }
@@ -32,7 +34,7 @@ def log_setup():
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)s : %(message)s", "%b %d %H:%M:%S"
     )
-    formatter.converter = time.gmtime  # if you want UTC time
+    formatter.converter = time.gmtime
     log_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
     logger = logging.getLogger()
@@ -41,24 +43,33 @@ def log_setup():
     logger.setLevel(logging.INFO)
 
 
-def createImage(vpsId, numRows, mediaPath, gameName, fileNameSuffix):
+def createHighScoresLeaderboard(vpsId, numRows, mediaPath, gameName, fileNameSuffix):
     payload = json.dumps({"vpsId": vpsId, "numRows": numRows})
-    res = make_session().request("POST", convertUri, headers=headers, data=payload)
+    res = make_session().request("POST", highScoresUri, headers=headers, data=payload)
     fullPath = mediaPath + "\\" + gameName + fileNameSuffix + ".png"
     with open(fullPath, "wb") as fh:
         fh.write(res.content)
 
 
-def fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath):
-    logging.info(f"\n\n----- fetchHighScoreImage Start")
+def createWeeklyLeaderboard(mediaPath, fileName="pl_TOTW", fileNameSuffix=""):
+    payload = json.dumps({"layout": "discord"})
+    res = make_session().request("POST", weeklyUri, headers=headers, data=payload)
+    fullPath = mediaPath + "\\" + fileName + fileNameSuffix + ".png"
+    with open(fullPath, "wb") as fh:
+        fh.write(res.content)
+    logging.info(f"Weekly leaderboard image saved to {fullPath}")
+
+
+def fetchHighScoreLeaderboard(vpsId, fieldNames, numRows, mediaPath):
+    logging.info(f"\n--------------- fetchHighScoreLeaderboard Start")
     logging.info(f"vpsId: {vpsId}, numRows: {numRows}, mediaPath: {mediaPath}")
 
     table = getTableFromPopperDB(vpsId, dbPath)
     gameName = table[fieldNames.index("GameName")]
 
-    createImage(vpsId, numRows, mediaPath, gameName, fileNameSuffix)
+    createHighScoresLeaderboard(vpsId, numRows, mediaPath, gameName, fileNameSuffix)
 
-    logging.info(f"----- fetchHighScoreImage End")
+    logging.info(f"\n--------------- fetchHighScoreLeaderboard End")
 
 
 def getTableFromPopperDB(vpsId, dbPath):
@@ -92,8 +103,13 @@ fieldNames = []
 try:
     logging.info(f"args: {sys.argv[1:]}")
 
-    if len(sys.argv) > 1:
-        logging.info("Found more than 0 arguments")
+    if len(sys.argv) > 1 and sys.argv[1].lower() == "weekly":
+        weeklyMediaPath = sys.argv[2] if len(sys.argv) > 2 else "c:\\temp"
+        weeklyFileName = sys.argv[3] if len(sys.argv) > 3 else "pl_TOTW"
+        weeklyFileNameSuffix = sys.argv[4] if len(sys.argv) > 4 else ""
+        logging.info(f"Starting weekly leaderboard fetch")
+        createWeeklyLeaderboard(weeklyMediaPath, weeklyFileName, weeklyFileNameSuffix)
+    elif len(sys.argv) > 1:
         exeName = sys.argv[0]
         updateAll = strtobool(sys.argv[1])
         vpsId = sys.argv[2]
@@ -103,8 +119,31 @@ try:
         numRows = int(sys.argv[6])
         fileNameSuffix = sys.argv[7]
         logging.info(
-            f"exeName: {exeName}, updateAll: {updateAll}, vpsId: {vpsId}, vpsIdField: {vpsIdField}, dbPath: {dbPath}, mediaPath: {mediaPath}, numRows: {numRows}, fileNameSuffix: ${fileNameSuffix}"
+            f"exeName: {exeName}, updateAll: {updateAll}, vpsId: {vpsId}, vpsIdField: {vpsIdField}, dbPath: {dbPath}, mediaPath: {mediaPath}, numRows: {numRows}, fileNameSuffix: {fileNameSuffix}"
         )
+
+        ## fetching all tables
+        conn = sqlite3.connect(dbPath + "\\" + "PUPDatabase.db")
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM 'Games' WHERE EMUID = 1 ORDER BY GameDisplay")
+        fieldNames = [description[0] for description in cur.description]
+        rows = cur.fetchall()
+        conn.close()
+
+        if updateAll:
+            logging.info(f"Starting to update all tables")
+            logging.info(f"Found {str(len(rows))} tables")
+            for row in rows:
+                gameName = row[fieldNames.index("GameName")]
+                vpsId = row[fieldNames.index(vpsIdField)]
+                if vpsId:
+                    fetchHighScoreLeaderboard(vpsId, fieldNames, numRows, mediaPath)
+                else:
+                    logging.info(f"Skipping {gameName} — no vpsId")
+            logging.info(f"Finished updating all tables")
+        else:
+            logging.info(f"Starting to update 1 table: " + vpsId)
+            fetchHighScoreLeaderboard(vpsId, fieldNames, numRows, mediaPath)
     else:
         logging.info("Found 0 arguments. Using default arguments for debugging")
         updateAll = False
@@ -115,28 +154,6 @@ try:
         numRows = 5
         fileNameSuffix = ""
 
-    ## fetching all tables
-    conn = sqlite3.connect(dbPath + "\\" + "PUPDatabase.db")
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM 'Games' WHERE EMUID = 1 ORDER BY GameDisplay")
-    fieldNames = [description[0] for description in cur.description]
-    rows = cur.fetchall()
-    conn.close()
-
-    if updateAll:
-        logging.info(f"Starting to update all tables")
-        logging.info(f"Found {str(len(rows))} tables")
-        for row in rows:
-            gameName = row[fieldNames.index("GameName")]
-            vpsId = row[fieldNames.index(vpsIdField)]
-            if vpsId:
-                fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath)
-            else:
-                logging.info(f"Skipping {gameName} — no vpsId")
-        logging.info(f"Finished updating all tables")
-    else:
-        logging.info(f"Starting to update 1 table: " + vpsId)
-        fetchHighScoreImage(vpsId, fieldNames, numRows, mediaPath)
 except Exception as err:
     logging.exception(err)
 
