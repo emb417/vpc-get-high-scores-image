@@ -1,6 +1,6 @@
 # vpc-get-high-scores-image
 
-This tool will pull data and create high score images for PinUP Popper to display when a mapped button is pressed. This brings the VPC High Scores onto your cab. It can update on startup of your cab and when entering and exiting the table.
+This tool will pull data and create high score images for PinUP Popper to display when a mapped button is pressed. This brings the VPC High Scores onto your cab. It can update on startup of your cab, when entering a table, or when exiting the table.
 
 **CAUTION: Please make sure you backup your PinUP Popper DB before making these changes!!!**
 
@@ -28,7 +28,7 @@ You can see the VPS Id for a table in the image below:
   3. `vpsIdField` (string): The name of the custom field in your PinUP Popper database that stores the VPS ID (e.g., "CUSTOM3").
   4. `dbPath` (string): The absolute path to your PinUP Popper database directory (e.g., `C:\Pinball\PinUPSystem`).
   5. `mediaPath` (string): The absolute path to the directory where the high score images will be saved (e.g., `C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2`).
-  6. `numRows` (integer): The number of high score rows to fetch and display in the image (e.g., "10").
+  6. `numRows` (integer): The number of high score rows to fetch and display in the image (e.g., "20").
   7. `fileNameSuffix` (string): An optional suffix to add to the generated image file name (e.g., "" for no suffix, or "\_HS" for `GameName_HS.png`).
   - **You will need change the `vpsIdField` above (e.g., CUSTOM3) to match the field you have chosen to house the VPS Id in Step 1 - 1b**
 
@@ -62,11 +62,11 @@ You can see the VPS Id for a table in the image below:
 
 2. On the "PinUP Player DIsplays" window, click on `Other2` in the "Select Screen" list
 
-3. Adjust this display to your liking. This will be the display for the high scores.
-   - Suggestions for main playfield screen:
-     - Rotation: `270`
-     - Width: `700` (or `350`)
-     - Height: `1172` (or `586`)
+3. Adjust this display to your liking. This will be the display for the high score image which is a 16x9 image (1920x1080).
+   - Suggestions for backglass screen:
+     - Rotation: `none`
+     - Width: `1920`
+     - Height: `1080`
      - Default State: `off`
 4. Click "Save Settings" button
 
@@ -95,11 +95,3 @@ You can see the VPS Id for a table in the image below:
 4. Navigate to a table
 
 5. Press button to display Other2 that you set in step #19.
-
-## **Refreshing All High Scores While in PinUP Popper**
-
-1. Get to the Operator Menu in PinUP Popper
-
-2. Scroll to Custom Scripts
-
-3. Press GetHighScoresForAllTables
