@@ -52,7 +52,7 @@ def createHighScoresLeaderboard(vpsId, numRows, mediaPath, gameName, fileNameSuf
 
 
 def createWeeklyLeaderboard(mediaPath, fileName="pl_TOTW", fileNameSuffix=""):
-    payload = json.dumps({"layout": "discord"})
+    payload = json.dumps({"layout": "backglass"})
     res = make_session().request("POST", weeklyUri, headers=headers, data=payload)
     fullPath = mediaPath + "\\" + fileName + fileNameSuffix + ".png"
     with open(fullPath, "wb") as fh:
