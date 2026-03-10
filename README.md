@@ -55,19 +55,19 @@ REM Weekly leaderboard — single image saved to BackGlass
 | 4   | `dbPath`         | `C:\Pinball\PinUPSystem`               | Path to your PinUP Popper database directory.                                                                        |
 | 5   | `mediaPath`      | `...\POPMedia\Visual Pinball X\Other2` | Directory where high score images will be saved.                                                                     |
 | 6   | `numRows`        | `20`                                   | Number of score rows to display (max 20).                                                                            |
-| 7   | `fileNameSuffix` | _(empty)_                              | Optional suffix appended to the image filename (e.g. `_HS` produces `GameName_HS.png`).                              |
+| 7   | `fileNameSuffix` | _(empty)_                              | Optional suffix appended to the image filename (e.g. `02` produces `GameName02`).png`).                              |
 | 8   | `layout`         | `landscape`                            | `landscape` (1920×1080, 3-column with table art) or `portrait` (640px wide, single column). Defaults to `landscape`. |
 
-### Weekly Leaderboard Parameters
+### Weekly Competition Leaderboard Parameters
 
-| #   | Parameter        | Example                          | Description                                                            |
-| --- | ---------------- | -------------------------------- | ---------------------------------------------------------------------- |
-| 1   | `weekly`         | `weekly`                         | Triggers weekly leaderboard mode. Must be the literal string `weekly`. |
-| 2   | `mediaPath`      | `...\POPMedia\Default\BackGlass` | Directory where the weekly leaderboard image will be saved.            |
-| 3   | `fileName`       | `pl_TOTW`                        | Output filename (without extension). Defaults to `pl_TOTW`.            |
-| 4   | `fileNameSuffix` | _(empty)_                        | Optional suffix appended to the filename.                              |
-| 5   | `numRows`        | `20`                             | Number of score rows to display (default 20).                          |
-| 6   | `layout`         | `landscape`                      | `landscape` or `portrait`. Defaults to `landscape`.                    |
+| #   | Parameter        | Example                          | Description                                                         |
+| --- | ---------------- | -------------------------------- | ------------------------------------------------------------------- |
+| 1   | `weekly`         | `weekly`                         | Triggers weekly competition leaderboard mode. Must be `weekly`.     |
+| 2   | `mediaPath`      | `...\POPMedia\Default\BackGlass` | Directory where the weekly leaderboard image will be saved.         |
+| 3   | `fileName`       | `pl_TOTW`                        | Output filename (without extension). Defaults to `pl_TOTW`.         |
+| 4   | `fileNameSuffix` | _(empty)_                        | Optional suffix appended to the filename (e.g. `02` > `pl_TOTW02`). |
+| 5   | `numRows`        | `20`                             | Number of score rows to display (default 20).                       |
+| 6   | `layout`         | `landscape`                      | `landscape` or `portrait`. Defaults to `landscape`.                 |
 
 ---
 
