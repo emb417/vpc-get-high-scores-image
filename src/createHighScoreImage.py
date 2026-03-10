@@ -55,9 +55,9 @@ def createHighScoresLeaderboard(
 
 
 def createWeeklyLeaderboard(
-    mediaPath, fileName="pl_TOTW", fileNameSuffix="", layout="portrait"
+    mediaPath, fileName="pl_TOTW", fileNameSuffix="", numRows=20, layout="landscape"
 ):
-    payload = json.dumps({"layout": layout})
+    payload = json.dumps({"layout": layout, "numRows": numRows})
     res = make_session().request("POST", weeklyUri, headers=headers, data=payload)
     fullPath = mediaPath + "\\" + fileName + fileNameSuffix + ".png"
     with open(fullPath, "wb") as fh:
@@ -118,10 +118,15 @@ try:
         weeklyMediaPath = sys.argv[2] if len(sys.argv) > 2 else "c:\\temp"
         weeklyFileName = sys.argv[3] if len(sys.argv) > 3 else "pl_TOTW"
         weeklyFileNameSuffix = sys.argv[4] if len(sys.argv) > 4 else ""
-        weeklyLayout = sys.argv[5] if len(sys.argv) > 5 else "landscape"
+        weeklyNumRows = int(sys.argv[5]) if len(sys.argv) > 5 else 20
+        weeklyLayout = sys.argv[6] if len(sys.argv) > 6 else "landscape"
         logging.info(f"Starting weekly leaderboard fetch")
         createWeeklyLeaderboard(
-            weeklyMediaPath, weeklyFileName, weeklyFileNameSuffix, weeklyLayout
+            weeklyMediaPath,
+            weeklyFileName,
+            weeklyFileNameSuffix,
+            weeklyNumRows,
+            weeklyLayout,
         )
     elif len(sys.argv) > 1:
         exeName = sys.argv[0]

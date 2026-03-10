@@ -33,7 +33,7 @@ You can find the VPS ID for any table here:
 
    > **Note:** If you used Baller Installer, your LAUNCH folder may be in a different location.
 
-2. Open `POPMENU_GetHighScoresForAllTables.bat` and edit the invocations to match your setup. The bat file runs the exe twice — once for high scores, once for the weekly leaderboard:
+2. Edit `POPMENU_GetHighScoresForAllTables.bat` and `POPMENU_GetWeeklyLeaderboard.bat` to update the invocations to match your setup. The bat files runs the same exe — once for high scores, once for the weekly leaderboard:
 
 ```bat
 REM High scores leaderboard — one image per table saved to Other2
@@ -42,6 +42,8 @@ REM High scores leaderboard — one image per table saved to Other2
 REM Weekly leaderboard — single image saved to BackGlass
 "%_curloc%vpc-get-high-scores-image.exe" "weekly" "%_ParentFolderName%\POPMedia\Default\BackGlass" "pl_TOTW" "" "landscape"
 ```
+
+1. Create a new shortcuts for `POPMENU_GetHighScoresForAllTables.bat` and `POPMENU_GetWeeklyLeaderboard.bat`, placing them in your windows startup folder.
 
 ### High Scores Parameters
 
@@ -64,7 +66,8 @@ REM Weekly leaderboard — single image saved to BackGlass
 | 2   | `mediaPath`      | `...\POPMedia\Default\BackGlass` | Directory where the weekly leaderboard image will be saved.            |
 | 3   | `fileName`       | `pl_TOTW`                        | Output filename (without extension). Defaults to `pl_TOTW`.            |
 | 4   | `fileNameSuffix` | _(empty)_                        | Optional suffix appended to the filename.                              |
-| 5   | `layout`         | `landscape`                      | `landscape` or `portrait`. Defaults to `landscape`.                    |
+| 5   | `numRows`        | `20`                             | Number of score rows to display (default 20).                          |
+| 6   | `layout`         | `landscape`                      | `landscape` or `portrait`. Defaults to `landscape`.                    |
 
 ---
 
@@ -74,13 +77,13 @@ REM Weekly leaderboard — single image saved to BackGlass
 
 2. Paste the following at the end of the **Launch Script**:
 
-```
+```bash
 START /min "" "[STARTDIR]LAUNCH\vpc-get-high-scores-image.exe" "False" "[CUSTOM3]" "CUSTOM3" "C:\Pinball\PinUPSystem" "C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2" "20" "" "landscape"
 ```
 
 > Change `CUSTOM3` to match the field you configured in the setup step above.
 
-3. Save and Close.
+1. Save and Close.
 
 ---
 
