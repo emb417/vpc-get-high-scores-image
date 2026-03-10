@@ -3,7 +3,7 @@
 This tool pulls data from the VPC API and creates leaderboard images for PinUP Popper to display when a mapped button is pressed. It supports two modes:
 
 - **High Scores**: All-time high scores for any table tracked on VPC, saved per-table by game name
-- **Weekly Leaderboard**: The current VPC Competition Corner weekly leaderboard, saved as a single image
+- **Weekly Competition Leaderboard**: The current VPC Competition Corner weekly leaderboard, saved as a single image
 
 Images can be updated on startup, when entering a table, or when exiting a table.
 
@@ -33,17 +33,17 @@ You can find the VPS ID for any table here:
 
    > **Note:** If you used Baller Installer, your LAUNCH folder may be in a different location.
 
-2. Edit `POPMENU_GetHighScoresForAllTables.bat` and `POPMENU_GetWeeklyLeaderboard.bat` to update the invocations to match your setup. The bat files runs the same exe — once for high scores, once for the weekly leaderboard:
+2. Edit `POPMENU_GetHighScoresForAllTables.bat` and `POPMENU_GetWeeklyCompetitionLeaderboard.bat` to update the invocations to match your setup. The bat files runs the same exe — once for high scores, once for the weekly competition leaderboard:
 
 ```bat
 REM High scores leaderboard — one image per table saved to Other2
 "%_curloc%vpc-get-high-scores-image.exe" "True" "" "CUSTOM3" "%_ParentFolderName%" "%_ParentFolderName%\POPmedia\Visual Pinball X\Other2" "20" "" "landscape"
 
-REM Weekly leaderboard — single image saved to BackGlass
+REM Weekly Competition leaderboard — single image saved to BackGlass
 "%_curloc%vpc-get-high-scores-image.exe" "weekly" "%_ParentFolderName%\POPMedia\Default\BackGlass" "pl_TOTW" "" "landscape"
 ```
 
-1. Create a new shortcuts for `POPMENU_GetHighScoresForAllTables.bat` and `POPMENU_GetWeeklyLeaderboard.bat`, placing them in your windows startup folder.
+1. Create a new shortcuts for `POPMENU_GetHighScoresForAllTables.bat` and `POPMENU_GetWeeklyCompetitionLeaderboard.bat`, placing them in your windows startup folder.
 
 ### High Scores Parameters
 
@@ -60,14 +60,14 @@ REM Weekly leaderboard — single image saved to BackGlass
 
 ### Weekly Competition Leaderboard Parameters
 
-| #   | Parameter        | Example                          | Description                                                         |
-| --- | ---------------- | -------------------------------- | ------------------------------------------------------------------- |
-| 1   | `weekly`         | `weekly`                         | Triggers weekly competition leaderboard mode. Must be `weekly`.     |
-| 2   | `mediaPath`      | `...\POPMedia\Default\BackGlass` | Directory where the weekly leaderboard image will be saved.         |
-| 3   | `fileName`       | `pl_TOTW`                        | Output filename (without extension). Defaults to `pl_TOTW`.         |
-| 4   | `fileNameSuffix` | _(empty)_                        | Optional suffix appended to the filename (e.g. `02` > `pl_TOTW02`). |
-| 5   | `numRows`        | `20`                             | Number of score rows to display (default 20).                       |
-| 6   | `layout`         | `landscape`                      | `landscape` or `portrait`. Defaults to `landscape`.                 |
+| #   | Parameter        | Example                          | Description                                                                        |
+| --- | ---------------- | -------------------------------- | ---------------------------------------------------------------------------------- |
+| 1   | `weekly`         | `weekly`                         | Triggers weekly competition leaderboard mode. Must be the literal string `weekly`. |
+| 2   | `mediaPath`      | `...\POPMedia\Default\BackGlass` | Directory where the weekly competition leaderboard image will be saved.            |
+| 3   | `fileName`       | `pl_TOTW`                        | Output filename (without extension). Defaults to `pl_TOTW`.                        |
+| 4   | `fileNameSuffix` | _(empty)_                        | Optional suffix appended to the filename (e.g. `02` produces `pl_TOTW02`).         |
+| 5   | `numRows`        | `20`                             | Number of score rows to display (default 20).                                      |
+| 6   | `layout`         | `landscape`                      | `landscape` or `portrait`. Defaults to `landscape`.                                |
 
 ---
 
