@@ -64,6 +64,8 @@ jobs:
           New-Item -ItemType Directory -Force -Path release
           Copy-Item -Path src\dist\vpc-get-high-scores-image.exe `
                     -Destination release\
+          Copy-Item -Path src\POPMENU_GetWeeklyLeaderboard.bat `
+                    -Destination release\
           Copy-Item -Path src\POPMENU_GetHighScoresForAllTables.bat `
                     -Destination release\
           Copy-Item -Path src\playsound.exe `
