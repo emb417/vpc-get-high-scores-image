@@ -1,99 +1,146 @@
 # vpc-get-high-scores-image
 
-This tool will pull data and create high score images for PinUP Popper to display when a mapped button is pressed. This brings the VPC High Scores onto your cab. It can update on startup of your cab, when entering a table, or when exiting the table.
+This tool pulls data from the VPC API and creates leaderboard images for PinUP Popper to display when a mapped button is pressed. It supports two modes:
+
+- **High Scores**: All-time high scores for any table tracked on VPC, saved per-table by game name
+- **Weekly Leaderboard**: The current VPC Competition Corner weekly leaderboard, saved as a single image
+
+Images can be updated on startup, when entering a table, or when exiting a table.
 
 ![image](_UMEFSmYor.png)
 
 **CAUTION: Please make sure you backup your PinUP Popper DB before making these changes!!!**
 
-## **Adding VPS Id to table(s) in PinUP Popper**
+---
 
-1. This tool requires the use of the VPS ID from <https://virtualpinballspreadsheet.github.io/> (hereby known as VPS). The easiest way to add the VPS Id to a table is through the import process via PinUP Popper.
+## Adding VPS ID to table(s) in PinUP Popper
 
-You can see the VPS Id for a table in the image below:
+This tool requires a VPS ID from <https://virtualpinballspreadsheet.github.io/> (hereby known as VPS) to be stored in a custom field in your PinUP Popper database.
+
+1. Download an updated `puplookup.csv` from VPS to your PinUPSystem folder:
+   <https://virtualpinballspreadsheet.github.io/export>
+
+2. Import data for each table via PinUP Popper's Game Manager so the VPS ID is written into the custom field you configured in the Popper Setup Lookup settings tab.
+
+You can find the VPS ID for any table here:
 ![image](vps_id_location.png)
 
-**1a.** Download an updated version of the puplookup.csv from VPS to the PinUPSystem folder from: <https://virtualpinballspreadsheet.github.io/export>
+---
 
-**1b.** You now need to import data for each new table so it picks up the VPS ID into the field you configured in Pinup Popper Lookup settings tab in the Game Manager (add VPS-ID to the field).
+## Setup: Batch File on Windows Startup
 
-## **Setup the batch file to run on Windows startup**
+1. Download the latest release from <https://github.com/emb417/vpc-get-high-scores-image/releases> and copy all files to your `LAUNCH` folder (typically `C:\Pinball\PinUPSystem\LAUNCH`).
 
-1. Using <https://github.com/emb417/vpc-get-high-scores-image/releases>, download the following files to the `C:\Pinball\PinUPSystem\LAUNCH` folder (**IMPORTANT: BE AWARE THE LAUNCH FOLDER MIGHT BE IN A DIFFERENT LOCATION IF YOU HAVE USED BALLER INSTALLER**).
+   > **Note:** If you used Baller Installer, your LAUNCH folder may be in a different location.
 
-2. Open `POPMENU_GetHighScoresForAllTables.bat` and edit line 3 to conform to your field.
-   - Example: `"%_curloc%\vpc-get-high-scores-image.exe" "True" "" "CUSTOM3" "%_ParentFolderName%" "%_ParentFolderName%\POPmedia\Visual Pinball X\Other2" "10" ""`
+2. Open `POPMENU_GetHighScoresForAllTables.bat` and edit the invocations to match your setup. The bat file runs the exe twice — once for high scores, once for the weekly leaderboard:
 
-- **Parameters Explained:**
-  1. `updateAll` (True/False): If "True", the script will iterate through all tables in the PinUP Popper database (filtered by EMUID = 1) and update their high score images. If "False", it will only update the image for the specific `vpsId` provided.
-  2. `vpsId` (string): The VPS ID of the table to update. This parameter is ignored if `updateAll` is "True".
-  3. `vpsIdField` (string): The name of the custom field in your PinUP Popper database that stores the VPS ID (e.g., "CUSTOM3").
-  4. `dbPath` (string): The absolute path to your PinUP Popper database directory (e.g., `C:\Pinball\PinUPSystem`).
-  5. `mediaPath` (string): The absolute path to the directory where the high score images will be saved (e.g., `C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2`).
-  6. `numRows` (integer): The number of high score rows to fetch and display in the image (e.g., "20").
-  7. `fileNameSuffix` (string): An optional suffix to add to the generated image file name (e.g., "" for no suffix, or "\_HS" for `GameName_HS.png`).
-  - **You will need change the `vpsIdField` above (e.g., CUSTOM3) to match the field you have chosen to house the VPS Id in Step 1 - 1b**
+```bat
+REM High scores leaderboard — one image per table saved to Other2
+"%_curloc%vpc-get-high-scores-image.exe" "True" "" "CUSTOM3" "%_ParentFolderName%" "%_ParentFolderName%\POPmedia\Visual Pinball X\Other2" "20" "" "landscape"
 
-1. Create a shortcut to `POPMENU_GetHighScoresForAllTables.bat`
+REM Weekly leaderboard — single image saved to BackGlass
+"%_curloc%vpc-get-high-scores-image.exe" "weekly" "%_ParentFolderName%\POPMedia\Default\BackGlass" "pl_TOTW" "" "landscape"
+```
 
-2. Copy the shortcut to your Windows startup folder
+### High Scores Parameters
 
-## **Setup scripts to run the vpc-get-high-scores-image.exe on Launch and Close of the table**
+| #   | Parameter        | Example                                | Description                                                                                                          |
+| --- | ---------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1   | `updateAll`      | `True`                                 | If `True`, updates all tables in PinUP Popper (EMUID=1). If `False`, updates only the table matching `vpsId`.        |
+| 2   | `vpsId`          | _(empty)_                              | VPS ID of a specific table. Ignored when `updateAll` is `True`.                                                      |
+| 3   | `vpsIdField`     | `CUSTOM3`                              | The PinUP Popper custom field that stores the VPS ID. Must match what you configured in Step 1.                      |
+| 4   | `dbPath`         | `C:\Pinball\PinUPSystem`               | Path to your PinUP Popper database directory.                                                                        |
+| 5   | `mediaPath`      | `...\POPMedia\Visual Pinball X\Other2` | Directory where high score images will be saved.                                                                     |
+| 6   | `numRows`        | `20`                                   | Number of score rows to display (max 20).                                                                            |
+| 7   | `fileNameSuffix` | _(empty)_                              | Optional suffix appended to the image filename (e.g. `_HS` produces `GameName_HS.png`).                              |
+| 8   | `layout`         | `landscape`                            | `landscape` (1920×1080, 3-column with table art) or `portrait` (640px wide, single column). Defaults to `landscape`. |
 
-1. Pinup Popper Setup > Popper Setup Tab > Emulators > Visual Pinball X > Launch Setup Tab
-   - Paste the following at the end of 1. **Launch Script** and 2. **Close Script**:
-     - `START /min "" "[STARTDIR]LAUNCH\vpc-get-high-scores-image.exe" "False" "[CUSTOM3]" "CUSTOM3" "C:\Pinball\PinUPSystem" "C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2" "10" ""`
-       - **You will need change the `vpsIdField` (e.g., CUSTOM3) above to match the field you have chosen to house the VPS Id in Step 1 - 1b**
-2. Save and Close
+### Weekly Leaderboard Parameters
 
-## **Enable Display to Show Other2**
+| #   | Parameter        | Example                          | Description                                                            |
+| --- | ---------------- | -------------------------------- | ---------------------------------------------------------------------- |
+| 1   | `weekly`         | `weekly`                         | Triggers weekly leaderboard mode. Must be the literal string `weekly`. |
+| 2   | `mediaPath`      | `...\POPMedia\Default\BackGlass` | Directory where the weekly leaderboard image will be saved.            |
+| 3   | `fileName`       | `pl_TOTW`                        | Output filename (without extension). Defaults to `pl_TOTW`.            |
+| 4   | `fileNameSuffix` | _(empty)_                        | Optional suffix appended to the filename.                              |
+| 5   | `layout`         | `landscape`                      | `landscape` or `portrait`. Defaults to `landscape`.                    |
 
-1. Pinup Popper Setup > Popper Setup Tab > GlobalConfig button > Displays tab
+---
+
+## Setup: Run on Table Launch and Close
+
+1. Open PinUP Popper Setup > Popper Setup Tab > Emulators > Visual Pinball X > Launch Setup Tab
+
+2. Paste the following at the end of the **Launch Script**:
+
+```
+START /min "" "[STARTDIR]LAUNCH\vpc-get-high-scores-image.exe" "False" "[CUSTOM3]" "CUSTOM3" "C:\Pinball\PinUPSystem" "C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2" "20" "" "landscape"
+```
+
+> Change `CUSTOM3` to match the field you configured in the setup step above.
+
+3. Save and Close.
+
+---
+
+## Enable the Other2 Display in PinUP Popper
+
+1. PinUP Popper Setup > Popper Setup Tab > GlobalConfig > Displays tab
    - Set `Other 2` = `Active Hidden`
-2. Save
+2. Save.
 
-3. Pinup Popper Setup > Popper Setup Tab > Screens / Themes button
+3. PinUP Popper Setup > Popper Setup Tab > Screens / Themes button
 
-4. In Pup Pack Editor
-   - Change Mode field of `Other` to `ForcePop`
-5. Click "Save PuP-Pack" button
+4. In Pup Pack Editor, set the `Mode` field of `Other` to `ForcePop`
 
-## **Configure and Place the Other Display**
+5. Click **Save PuP-Pack**.
 
-1. On the same "PuP Editor" screen, click "Configure Display/Locations" button
+---
 
-2. On the "PinUP Player DIsplays" window, click on `Other2` in the "Select Screen" list
+## Configure and Place the Other2 Display
 
-3. Adjust this display to your liking. This will be the display for the high score image which is a 16x9 image (1920x1080).
-   - Suggestions for backglass screen:
+1. In the Pup Pack Editor, click **Configure Display/Locations**
+
+2. On the PinUP Player Displays window, select `Other2` from the screen list
+
+3. Adjust the display to your liking. High score images are 1920×1080 (landscape) or 640px wide (portrait).
+   - Suggested settings for a backglass screen:
      - Rotation: `none`
      - Width: `1920`
      - Height: `1080`
      - Default State: `off`
-4. Click "Save Settings" button
 
-5. Close "PuP Pack Editor" window
+   - Suggestions for a portrait layout (10 rows):
+     - Rotation: `none`
+     - Width: `640`
+     - Height: `752`
+     - Default State: `off`
 
-## **Configure key in PinUP Popper to display Other2 (the high score image)**
+     > **Note:** Portrait images are 640px wide and scale in height based on the number of rows. 10 rows produces a 640×752 image. Use `"portrait"` as the `layout` parameter and set `numRows` to `10` when generating the image.
 
-1. On "PinUP Popper Setup" window, click "Controller Setup" button
+     ![image](highscores_portrait_10.png)
 
-2. Assign key press to `Show Other` entry
+4. Click **Save Settings** and close the Pup Pack Editor.
 
-3. Click "Close" button
+---
 
-4. On "PinUP Popper Setup" window, click "Exit Setup" button
+## Configure a Button to Show the High Score Display
 
-## **Test Getting High Scores**
+1. PinUP Popper Setup > Controller Setup
 
-1. Navigate to the C:\Pinball\PinUPSystem\LAUNCH folder
+2. Assign a key press to the `Show Other` entry
+
+3. Click **Close**, then **Exit Setup**.
+
+---
+
+## Testing
+
+1. Navigate to `C:\Pinball\PinUPSystem\LAUNCH`
 
 2. Run `POPMENU_GetHighScoresForAllTables.bat`
-   You should see a command window start executing and pulling down the images...
-   You should also be able to check your `C:\Pinball\PinUPSystem\POPMedia\Visual Pinball X\Other2` folder to see the high score images being created.
 
-3. Run PinUP Popper
+   You should see a command window executing and pulling down images. Check your `Other2` and `BackGlass` media folders to confirm images are being created.
 
-4. Navigate to a table
-
-5. Press button to display Other2 that you set in step #19.
+3. Launch PinUP Popper, navigate to a table, and press the button you configured to display `Other2`.

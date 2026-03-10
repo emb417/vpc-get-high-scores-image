@@ -43,16 +43,21 @@ def log_setup():
     logger.setLevel(logging.INFO)
 
 
-def createHighScoresLeaderboard(vpsId, numRows, mediaPath, gameName, fileNameSuffix):
-    payload = json.dumps({"vpsId": vpsId, "numRows": numRows})
+def createHighScoresLeaderboard(
+    vpsId, numRows, mediaPath, gameName, fileNameSuffix, layout="landscape"
+):
+    payload = json.dumps({"vpsId": vpsId, "numRows": numRows, "layout": layout})
     res = make_session().request("POST", highScoresUri, headers=headers, data=payload)
     fullPath = mediaPath + "\\" + gameName + fileNameSuffix + ".png"
     with open(fullPath, "wb") as fh:
         fh.write(res.content)
+    logging.info(f"High scores leaderboard image saved to {fullPath}")
 
 
-def createWeeklyLeaderboard(mediaPath, fileName="pl_TOTW", fileNameSuffix=""):
-    payload = json.dumps({"layout": "backglass"})
+def createWeeklyLeaderboard(
+    mediaPath, fileName="pl_TOTW", fileNameSuffix="", layout="portrait"
+):
+    payload = json.dumps({"layout": layout})
     res = make_session().request("POST", weeklyUri, headers=headers, data=payload)
     fullPath = mediaPath + "\\" + fileName + fileNameSuffix + ".png"
     with open(fullPath, "wb") as fh:
@@ -60,14 +65,20 @@ def createWeeklyLeaderboard(mediaPath, fileName="pl_TOTW", fileNameSuffix=""):
     logging.info(f"Weekly leaderboard image saved to {fullPath}")
 
 
-def fetchHighScoreLeaderboard(vpsId, fieldNames, numRows, mediaPath):
+def fetchHighScoreLeaderboard(
+    vpsId, fieldNames, numRows, mediaPath, layout="landscape"
+):
     logging.info(f"\n--------------- fetchHighScoreLeaderboard Start")
-    logging.info(f"vpsId: {vpsId}, numRows: {numRows}, mediaPath: {mediaPath}")
+    logging.info(
+        f"vpsId: {vpsId}, numRows: {numRows}, mediaPath: {mediaPath}, layout: {layout}"
+    )
 
     table = getTableFromPopperDB(vpsId, dbPath)
     gameName = table[fieldNames.index("GameName")]
 
-    createHighScoresLeaderboard(vpsId, numRows, mediaPath, gameName, fileNameSuffix)
+    createHighScoresLeaderboard(
+        vpsId, numRows, mediaPath, gameName, fileNameSuffix, layout
+    )
 
     logging.info(f"\n--------------- fetchHighScoreLeaderboard End")
 
@@ -107,8 +118,11 @@ try:
         weeklyMediaPath = sys.argv[2] if len(sys.argv) > 2 else "c:\\temp"
         weeklyFileName = sys.argv[3] if len(sys.argv) > 3 else "pl_TOTW"
         weeklyFileNameSuffix = sys.argv[4] if len(sys.argv) > 4 else ""
+        weeklyLayout = sys.argv[5] if len(sys.argv) > 5 else "landscape"
         logging.info(f"Starting weekly leaderboard fetch")
-        createWeeklyLeaderboard(weeklyMediaPath, weeklyFileName, weeklyFileNameSuffix)
+        createWeeklyLeaderboard(
+            weeklyMediaPath, weeklyFileName, weeklyFileNameSuffix, weeklyLayout
+        )
     elif len(sys.argv) > 1:
         exeName = sys.argv[0]
         updateAll = strtobool(sys.argv[1])
@@ -118,11 +132,11 @@ try:
         mediaPath = sys.argv[5]
         numRows = int(sys.argv[6])
         fileNameSuffix = sys.argv[7]
+        layout = sys.argv[8] if len(sys.argv) > 8 else "landscape"
         logging.info(
-            f"exeName: {exeName}, updateAll: {updateAll}, vpsId: {vpsId}, vpsIdField: {vpsIdField}, dbPath: {dbPath}, mediaPath: {mediaPath}, numRows: {numRows}, fileNameSuffix: {fileNameSuffix}"
+            f"exeName: {exeName}, updateAll: {updateAll}, vpsId: {vpsId}, vpsIdField: {vpsIdField}, dbPath: {dbPath}, mediaPath: {mediaPath}, numRows: {numRows}, fileNameSuffix: {fileNameSuffix}, layout: {layout}"
         )
 
-        ## fetching all tables
         conn = sqlite3.connect(dbPath + "\\" + "PUPDatabase.db")
         cur = conn.cursor()
         cur.execute("SELECT * FROM 'Games' WHERE EMUID = 1 ORDER BY GameDisplay")
@@ -137,13 +151,15 @@ try:
                 gameName = row[fieldNames.index("GameName")]
                 vpsId = row[fieldNames.index(vpsIdField)]
                 if vpsId:
-                    fetchHighScoreLeaderboard(vpsId, fieldNames, numRows, mediaPath)
+                    fetchHighScoreLeaderboard(
+                        vpsId, fieldNames, numRows, mediaPath, layout
+                    )
                 else:
                     logging.info(f"Skipping {gameName} — no vpsId")
             logging.info(f"Finished updating all tables")
         else:
             logging.info(f"Starting to update 1 table: " + vpsId)
-            fetchHighScoreLeaderboard(vpsId, fieldNames, numRows, mediaPath)
+            fetchHighScoreLeaderboard(vpsId, fieldNames, numRows, mediaPath, layout)
     else:
         logging.info("Found 0 arguments. Using default arguments for debugging")
         updateAll = False
@@ -153,6 +169,7 @@ try:
         mediaPath = "c:\\temp"
         numRows = 5
         fileNameSuffix = ""
+        layout = "landscape"
 
 except Exception as err:
     logging.exception(err)
